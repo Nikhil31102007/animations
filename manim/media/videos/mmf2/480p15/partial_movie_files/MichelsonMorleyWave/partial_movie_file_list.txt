@@ -1,0 +1,5 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/mmf2/480p15/partial_movie_files/MichelsonMorleyWave/1584795214_3274960742_627691234.mp4'
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/mmf2/480p15/partial_movie_files/MichelsonMorleyWave/4072820271_2649053498_986985994.mp4'
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/mmf2/480p15/partial_movie_files/MichelsonMorleyWave/4072820271_1396817967_1398492125.mp4'
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/mmf2/480p15/partial_movie_files/MichelsonMorleyWave/4072820271_1754310298_1269141548.mp4'

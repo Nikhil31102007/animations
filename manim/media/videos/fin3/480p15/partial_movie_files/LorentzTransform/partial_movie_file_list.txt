@@ -1,0 +1,8 @@
+# This file is used internally by FFMPEG.
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/fin3/480p15/partial_movie_files/LorentzTransform/1584795214_2121973925_223132457.mp4'
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/fin3/480p15/partial_movie_files/LorentzTransform/4072820271_2115492934_3823224612.mp4'
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/fin3/480p15/partial_movie_files/LorentzTransform/4072820271_2851723839_451868195.mp4'
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/fin3/480p15/partial_movie_files/LorentzTransform/4072820271_364232203_1717340298.mp4'
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/fin3/480p15/partial_movie_files/LorentzTransform/4072820271_476811991_1053638831.mp4'
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/fin3/480p15/partial_movie_files/LorentzTransform/4072820271_2209855495_899523664.mp4'
+file 'file:C:/Users/Professional/Desktop/cd/Py/manim/media/videos/fin3/480p15/partial_movie_files/LorentzTransform/4072820271_2408024828_2374440831.mp4'
