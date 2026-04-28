@@ -1,179 +1,211 @@
+
 from manim import *
 import numpy as np
 
 class ComptonEffect(Scene):
+
+    # ----------------------------
+    # PHOTON WAVE (CLEARLY VISIBLE)
+    # ----------------------------
+    def photon_wave(self, start, end, color=YELLOW):
+        direction = end - start
+        length = np.linalg.norm(direction)
+        unit_dir = direction / length
+
+        amplitude = 0.2
+        wavelength = 0.6
+
+        perp = np.array([-unit_dir[1], unit_dir[0], 0])
+
+        def wave_func(t):
+            return start + unit_dir*t + amplitude*np.sin(2*np.pi*t/wavelength)*perp
+
+        wave = ParametricFunction(
+            wave_func,
+            t_range=[0, length],
+            stroke_width=3,
+            color=color,
+            stroke_opacity=0.9
+        )
+
+        angle = np.arctan2(unit_dir[1], unit_dir[0])
+
+        arrow = Triangle(fill_opacity=1, color=color).scale(0.15)
+        arrow.rotate(angle - PI/2)
+        arrow.move_to(end + unit_dir * 0.15)
+
+        wave.set_z_index(1)
+        arrow.set_z_index(2)
+
+        return VGroup(wave, arrow)
+
     def construct(self):
 
-        # ----------------------------
-        # SCENE 1 — SETUP
-        # ----------------------------
-        title = Text("Compton Effect").to_edge(UP)
+        title = Text("Compton Scattering").to_edge(UP)
         self.play(Write(title))
 
-        photon = Arrow(LEFT*5, LEFT*1, color=YELLOW, buff=0)
-        photon.set_stroke(width=6)
-        photon.set_color(YELLOW)
-        photon.set_opacity(0.8)
-
+        # ----------------------------
+        # INITIAL OBJECTS
+        # ----------------------------
+        photon = self.photon_wave(LEFT*6, LEFT*2)
         photon_label = Text("Photon", font_size=24).next_to(photon, UP)
 
-        electron = Dot(RIGHT*1, color=BLUE)
+        electron = Dot(RIGHT*1, color=BLUE).scale(1.2)
         electron_label = Text("Electron", font_size=24).next_to(electron, DOWN)
 
         self.play(Create(photon), Write(photon_label))
         self.play(FadeIn(electron), Write(electron_label))
-
         self.wait()
 
-        # ----------------------------
-        # SCENE 2 — COLLISION
-        # ----------------------------
         collision_point = electron.get_center()
 
-        self.play(photon.animate.shift(RIGHT*4), run_time=2)
-        
-        #photon = Arrow(collision_point + LEFT*0.5, collision_point, color=YELLOW, buff=0)
-
-        # Scattered photon
-        scattered_photon = Arrow(
-            collision_point,
-            collision_point + UP*2 + RIGHT*2,
-            color=YELLOW,
-            buff=0
+        self.play(
+            photon.animate.shift(RIGHT*4),
+            run_time=2
         )
-        
-        #scattering angle
-        # Angle arc (theta)
-        angle = Angle(
-            Line(collision_point, collision_point + RIGHT*2),
-            Line(collision_point, collision_point + UP*2 + RIGHT*2),
-            radius=0.5,
+        self.remove(photon)
+        # Fade photon at collision point
+        self.play(FadeOut(photon), run_time=0.5)
+
+        # ----------------------------
+        # SCATTERED PHOTON (θ)
+        # ----------------------------
+        theta = PI/3
+        photon_dir = np.array([np.cos(theta), np.sin(theta), 0])
+
+        scattered_photon = self.photon_wave(
+            collision_point,
+            collision_point + 4 * photon_dir
+        )
+        scattered_photon.set_opacity(0.8)
+        theta_arc = Angle(
+            Line(collision_point, collision_point + RIGHT*3),
+            Line(collision_point, collision_point + photon_dir*3),
+            radius=0.7,
             color=WHITE
         )
 
-        theta_label = MathTex("\\theta").next_to(angle, RIGHT)
+        theta_label = MathTex("\\theta").next_to(theta_arc, RIGHT)
 
+        # ----------------------------
+        # ELECTRON DEFLECTION (γ)
+        # ----------------------------
+        gamma = PI/4
 
-        # Recoiled electron
-        recoiled_electron = Dot(color=BLUE).move_to(collision_point)
+        electron_dir = np.array([
+            np.cos(gamma),
+            -np.sin(gamma),
+            0
+        ])
 
-        self.play(Create(angle), Write(theta_label))
+        recoiled_electron = Dot(color=BLUE).scale(1.2).move_to(collision_point)
+
+        incident_line = Line(collision_point, collision_point + RIGHT*3)
+        electron_line = Line(collision_point, collision_point + electron_dir*3)
+
+        gamma_arc = Angle(
+            incident_line,
+            electron_line,
+            radius=1,
+            color=BLUE,
+            other_angle=True   
+        )
+
+        gamma_label = MathTex("\\gamma").next_to(gamma_arc, DOWN)
+
+        # show angles clearly
+        self.play(Create(theta_arc), Write(theta_label))
+        self.play(Create(gamma_arc), Write(gamma_label))
+
         self.play(
             FadeOut(photon),
             FadeOut(electron_label),
-            FadeOut(photon),
-            electron.animate.scale(1.2),
+            electron.animate.scale(1.3),
         )
 
         self.play(
             Create(scattered_photon),
-            recoiled_electron.animate.shift(RIGHT*2 + DOWN*1),
+            recoiled_electron.animate.shift(4 * electron_dir),
             run_time=2
         )
 
-        # Labels
-        sp_label = Text("Photon (λ ↑, E ↓)", font_size=24).next_to(scattered_photon, UP)
-        re_label = Text("Electron (E ↑)", font_size=24).next_to(recoiled_electron, DOWN)
-
-        self.play(Write(sp_label), Write(re_label))
         self.wait()
 
-        # ----------------------------
-        # SCENE 3 — ENERGY TEXT
-        # ----------------------------
-        energy_text = VGroup(
-            MathTex("E = h\\nu"),
-            MathTex("E = \\frac{hc}{\\lambda}")
-        ).arrange(DOWN).to_edge(LEFT)
-
-        self.play(Write(energy_text))
-        self.wait()
         self.clear()
+
         # ----------------------------
-        # SCENE 4 — GRAPH
+        # ENERGY vs ANGLE GRAPH (BATTLE STYLE)
         # ----------------------------
         axes = Axes(
-            x_range=[0, 5, 1],
+            x_range=[0, 2*PI, PI/2],
             y_range=[0, 5, 1],
-            axis_config={"include_numbers": True},
-        ).to_edge(DOWN)
+            x_length=8,
+            y_length=4,
+        )
 
         labels = axes.get_axis_labels(
-            Text("Time"), Text("Energy")
+            MathTex("\\theta"),
+            Text("Energy")
         )
 
-        # Photon energy decreases
-        photon_energy_graph = axes.plot(
-            lambda x: 4 if x < 2 else 4 - 1.2*(x-2),
-            x_range=[0, 5],
+        # exaggerated for visibility (battle crossing)
+        photon_energy = axes.plot(
+            lambda x: 4 - 2*(1 - np.cos(x)),
+            x_range=[0, 2*PI],
+            color=RED
         )
 
-        # Electron energy increases
-        electron_energy_graph = axes.plot(
-            lambda x: 0 if x < 2 else 1.2*(x-2),
-            x_range=[0, 5],
+        electron_energy = axes.plot(
+            lambda x: 2*(1 - np.cos(x)),
+            x_range=[0, 2*PI],
+            color=BLUE
         )
 
-        photon_graph_label = Text("Photon Energy", font_size=24).next_to(photon_energy_graph, UP)
-        electron_graph_label = Text("Electron Energy", font_size=24).next_to(electron_energy_graph, DOWN)
-        photon_graph_label.scale(0.8)
-        electron_graph_label.scale(0.8)
-         
+        photon_text = Text("Photon", color=RED).scale(0.7).next_to(photon_energy, DOWN)
+        electron_text = Text("Electron", color=BLUE).scale(0.7).next_to(electron_energy, UP)
+
         self.play(Create(axes), Write(labels))
-        self.play(Create(photon_energy_graph), Write(photon_graph_label))
-        self.play(Create(electron_energy_graph), Write(electron_graph_label))
+        self.play(Create(photon_energy), Write(photon_text))
+        self.play(Create(electron_energy), Write(electron_text))
+
+        # moving dots (battle interaction)
         tracker = ValueTracker(0)
 
-        dot_photon = always_redraw(lambda: 
-            Dot(axes.c2p(tracker.get_value(), 
-                        4 if tracker.get_value() < 2 else 4 - 1.2*(tracker.get_value()-2)))
+        dot_photon = always_redraw(lambda:
+            Dot(color=RED).move_to(
+                axes.c2p(
+                    tracker.get_value(),
+                    4 - 2*(1 - np.cos(tracker.get_value()))
+                )
+            )
         )
 
-        dot_electron = always_redraw(lambda: 
-            Dot(axes.c2p(tracker.get_value(), 
-                        0 if tracker.get_value() < 2 else 1.2*(tracker.get_value()-2)))
+        dot_electron = always_redraw(lambda:
+            Dot(color=BLUE).move_to(
+                axes.c2p(
+                    tracker.get_value(),
+                    2*(1 - np.cos(tracker.get_value()))
+                )
+            )
         )
 
         self.add(dot_photon, dot_electron)
-        self.play(tracker.animate.set_value(5), run_time=4, rate_func=linear)
 
+        self.play(tracker.animate.set_value(2*PI), run_time=5, rate_func=linear)
 
         self.wait()
-        graph_group = VGroup(
-            axes,
-            labels,
-            photon_energy_graph,
-            electron_energy_graph,
-            photon_graph_label,
-            electron_graph_label,
-            dot_photon,
-            dot_electron
-        )
-        self.play(
-            graph_group.animate.scale(0.6).to_corner(DL),
-            run_time=1.5,
-            rate_functions=smooth
-        )
 
         # ----------------------------
-        # SCENE 5 — FORMULA
+        # FINAL FORMULA
         # ----------------------------
         formula = MathTex(
             "\\Delta \\lambda = \\frac{h}{m_e c}(1 - \\cos\\theta)"
-        ).to_edge(UR,buff=1)
+        ).to_edge(UR)
 
-        box = SurroundingRectangle(formula, color=WHITE)
-
-
-        note = Text("Wavelength increases after scattering", font_size=24).next_to(formula, DOWN)
-        self.play(Write(note))
-
+        box = SurroundingRectangle(formula)
 
         self.play(Write(formula), Create(box))
         self.wait(2)
 
-        # Fade out nicely
-        self.play(
-            FadeOut(*self.mobjects)
-        )
-        self.wait(2)
+        self.play(FadeOut(*self.mobjects))
+        self.wait()
