@@ -1,7 +1,7 @@
 from manim import *
 import numpy as np
 
-class PhotoelectricEffect(Scene):
+class PhotoelectricEffectSlanted(Scene):
     def construct(self):
 
         # ----------------------------
@@ -10,50 +10,62 @@ class PhotoelectricEffect(Scene):
         title = Text("Photoelectric Effect").to_edge(UP)
         self.play(Write(title))
 
+        # Reference Y just below title (so rays don't overlap it)
+        top_y = title.get_bottom()[1] - 1
+
         # ----------------------------
-        # METAL PLATE
+        # METAL PLATE (BOTTOM)
         # ----------------------------
-        plate = Rectangle(width=4, height=2, color=BLUE).shift(RIGHT*3)
-        plate_label = Text("Metal", font_size=24).next_to(plate, DOWN)
+        plate = Rectangle(width=6, height=1, color=BLUE).to_edge(DOWN)
+        plate_label = Text("Metal Surface", font_size=24).next_to(plate, DOWN)
 
         self.play(Create(plate), Write(plate_label))
 
         # ----------------------------
+        # HELPER: SLANTED RAYS (FIXED)
+        # ----------------------------
+        def create_slanted_rays(n, color, spread=2.5):
+            rays = VGroup()
+            xs = np.linspace(-spread, spread, n)
+
+            for x in xs:
+                start = np.array([x - 1, top_y, 0])     # starts BELOW title
+                end = np.array([x + 0.5, -1.5, 0])      # shorter + angled
+
+                ray = Arrow(start, end, buff=0, color=color)
+                rays.add(ray)
+
+            return rays
+
+        # ----------------------------
         # LOW FREQUENCY (NO EMISSION)
         # ----------------------------
-        rays = VGroup(*[
-            Arrow(LEFT*5 + UP*i, LEFT*1 + UP*i, color=RED, buff=0)
-            for i in np.linspace(-1, 1, 5)
-        ])
+        rays_low = create_slanted_rays(6, RED)
 
         low_label = Text("Low Frequency Light", font_size=24).next_to(title, DOWN)
 
-        self.play(Create(rays), Write(low_label))
-        self.play(rays.animate.shift(RIGHT*2), run_time=3)
+        self.play(Create(rays_low), Write(low_label))
+        self.wait(2)
 
-        no_emission = Text("No Electrons Emitted", color=RED).to_edge(DOWN)
+        no_emission = Text("No Electrons Emitted", color=RED).next_to(plate, UP, buff=0.5)
         self.play(Write(no_emission))
-        self.wait(1.5)
+        self.wait(2)
 
-        self.play(FadeOut(no_emission), FadeOut(rays), FadeOut(low_label))
+        self.play(FadeOut(rays_low), FadeOut(low_label), FadeOut(no_emission))
 
         # ----------------------------
         # HIGH FREQUENCY (EMISSION)
         # ----------------------------
-        rays_high = VGroup(*[
-            Arrow(LEFT*5 + UP*i, LEFT*1 + UP*i, color=YELLOW, buff=0)
-            for i in np.linspace(-1, 1, 5)
-        ])
+        rays_high = create_slanted_rays(6, YELLOW)
 
         high_label = Text("High Frequency Light", font_size=24).next_to(title, DOWN)
 
         self.play(Create(rays_high), Write(high_label))
-        self.play(rays_high.animate.shift(RIGHT*2), run_time=3)
+        self.wait(1.5)
 
-        # Controlled electrons (bounded region)
         electrons = VGroup(*[
             Dot(
-                plate.get_left() + UP*np.random.uniform(-0.7, 0.7),
+                plate.get_top() + RIGHT*np.random.uniform(-2.5, 2.5),
                 radius=0.05,
                 color=GREEN
             )
@@ -64,42 +76,39 @@ class PhotoelectricEffect(Scene):
 
         animations = []
         for e in electrons:
-            dx = np.random.uniform(1.5, 2.5)   # limited horizontal
-            dy = np.random.uniform(-1, 1)      # limited vertical (avoid text)
+            dx = np.random.uniform(-2, 2)
+            dy = np.random.uniform(1.5, 3)
+
             animations.append(
-                e.animate.shift(LEFT*dx + UP*dy).set_run_time(2.5)
+                e.animate.shift(RIGHT*dx + UP*dy).set_run_time(2.5)
             )
 
         self.play(*animations)
 
-        emission_label = Text("Electrons Emitted!", color=GREEN).to_edge(DOWN)
+        emission_label = Text("Electrons Emitted!", color=GREEN).next_to(plate, UP, buff=0.5)
         self.play(Write(emission_label))
-        self.wait(1.5)
+        self.wait(2)
 
-        # REMOVE electrons before next phase
         self.play(
-            FadeOut(emission_label),
             FadeOut(electrons),
             FadeOut(rays_high),
-            FadeOut(high_label)
+            FadeOut(high_label),
+            FadeOut(emission_label)
         )
 
         # ----------------------------
         # HIGH INTENSITY (MORE ELECTRONS)
         # ----------------------------
-        rays_intense = VGroup(*[
-            Arrow(LEFT*5 + UP*i, LEFT*1 + UP*i, color=YELLOW, buff=0)
-            for i in np.linspace(-1.2, 1.2, 8)
-        ])
+        rays_intense = create_slanted_rays(10, YELLOW, spread=3)
 
         intensity_label = Text("Higher Intensity (More Photons)", font_size=24).next_to(title, DOWN)
 
         self.play(Create(rays_intense), Write(intensity_label))
-        self.play(rays_intense.animate.shift(RIGHT*2), run_time=3)
+        self.wait(1.5)
 
         electrons_more = VGroup(*[
             Dot(
-                plate.get_left() + UP*np.random.uniform(-0.7, 0.7),
+                plate.get_top() + RIGHT*np.random.uniform(-3, 3),
                 radius=0.05,
                 color=GREEN
             )
@@ -110,19 +119,19 @@ class PhotoelectricEffect(Scene):
 
         animations = []
         for e in electrons_more:
-            dx = np.random.uniform(1.5, 3)
-            dy = np.random.uniform(-1.2, 1.2)
+            dx = np.random.uniform(-2.5, 2.5)
+            dy = np.random.uniform(1.5, 3.5)
+
             animations.append(
-                e.animate.shift(LEFT*dx + UP*dy).set_run_time(2.5)
+                e.animate.shift(RIGHT*dx + UP*dy).set_run_time(2.5)
             )
 
         self.play(*animations)
 
-        more_label = Text("More Electrons Emitted", color=GREEN).to_edge(DOWN)
+        more_label = Text("More Electrons Emitted", color=GREEN).next_to(plate, UP, buff=0.5)
         self.play(Write(more_label))
         self.wait(2)
 
-        # Clean everything
         self.play(
             FadeOut(electrons_more),
             FadeOut(rays_intense),
@@ -131,9 +140,9 @@ class PhotoelectricEffect(Scene):
         )
 
         # ----------------------------
-        # FINAL SUMMARY (CLEAN SCREEN)
+        # FINAL SUMMARY
         # ----------------------------
-        self.play(FadeOut(*self.mobjects))  # remove EVERYTHING on screen
+        self.play(FadeOut(*self.mobjects))
 
         summary = VGroup(
             Text("Key Idea:", font_size=32),
